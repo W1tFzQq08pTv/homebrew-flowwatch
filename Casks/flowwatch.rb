@@ -7,7 +7,7 @@ cask "flowwatch" do
   desc "Menu bar network speed monitor and traffic stats"
   homepage "https://github.com/huangxida/FlowWatch"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "FlowWatch.app"
 
