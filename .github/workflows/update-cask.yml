@@ -1,0 +1,109 @@
+name: Update cask
+
+on:
+  schedule:
+    - cron: "20 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-cask:
+    runs-on: macos-latest
+
+    env:
+      CASK_PATH: Casks/flowwatch.rb
+      UPDATE_BRANCH: update/flowwatch-cask
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check latest FlowWatch release
+        id: release
+        run: |
+          current_version="$(sed -nE 's/^[[:space:]]*version "([^"]+)".*/\1/p' "$CASK_PATH")"
+          latest_tag="$(gh api repos/huangxida/FlowWatch/releases/latest --jq ".tag_name")"
+          latest_version="${latest_tag#v}"
+          asset_url="$(gh api repos/huangxida/FlowWatch/releases/latest --jq ".assets[] | select(.name == \"FlowWatch.dmg\") | .browser_download_url")"
+
+          if [ -z "$asset_url" ]; then
+            echo "FlowWatch.dmg was not found in the latest release assets." >&2
+            exit 1
+          fi
+
+          {
+            echo "current_version=$current_version"
+            echo "latest_version=$latest_version"
+            echo "asset_url=$asset_url"
+
+            if [ "$current_version" = "$latest_version" ]; then
+              echo "should_update=false"
+            else
+              echo "should_update=true"
+            fi
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download release asset and update cask
+        if: steps.release.outputs.should_update == 'true'
+        env:
+          FLOWWATCH_VERSION: ${{ steps.release.outputs.latest_version }}
+          FLOWWATCH_ASSET_URL: ${{ steps.release.outputs.asset_url }}
+        run: |
+          curl --fail --location --output /tmp/FlowWatch.dmg "$FLOWWATCH_ASSET_URL"
+          FLOWWATCH_SHA256="$(shasum -a 256 /tmp/FlowWatch.dmg | awk '{print $1}')"
+          export FLOWWATCH_SHA256
+
+          ruby -0pi -e '
+            version = ENV.fetch("FLOWWATCH_VERSION")
+            sha256 = ENV.fetch("FLOWWATCH_SHA256")
+            gsub(/version "[^"]+"/, "version \"#{version}\"")
+            gsub(/sha256 "[^"]+"/, "sha256 \"#{sha256}\"")
+          ' "$CASK_PATH"
+
+      - name: Validate updated cask
+        if: steps.release.outputs.should_update == 'true'
+        run: |
+          ruby -c "$CASK_PATH"
+          mkdir -p "$(brew --repository)/Library/Taps/huangxida"
+          ln -s "$PWD" "$(brew --repository)/Library/Taps/huangxida/homebrew-flowwatch"
+          brew info --cask flowwatch
+          brew audit --cask flowwatch
+
+      - name: Create update pull request
+        if: steps.release.outputs.should_update == 'true'
+        env:
+          FLOWWATCH_VERSION: ${{ steps.release.outputs.latest_version }}
+        run: |
+          if git diff --quiet -- "$CASK_PATH"; then
+            echo "No cask changes were generated."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin "$UPDATE_BRANCH:refs/remotes/origin/$UPDATE_BRANCH" || true
+          git switch -C "$UPDATE_BRANCH"
+          git add "$CASK_PATH"
+          git commit -m "更新 FlowWatch cask 到 ${FLOWWATCH_VERSION}"
+          git push --force-with-lease origin "$UPDATE_BRANCH"
+
+          pr_number="$(gh pr list --base main --head "$UPDATE_BRANCH" --state open --json number --jq ".[0].number // \"\"")"
+          pr_body="$(printf "## 变更\n- 更新 FlowWatch cask 到 \`%s\`\n- 重新计算 \`FlowWatch.dmg\` 的 sha256\n\n## 验证\n- \`ruby -c Casks/flowwatch.rb\`\n- \`brew info --cask flowwatch\`\n- \`brew audit --cask flowwatch\`\n" "$FLOWWATCH_VERSION")"
+
+          if [ -n "$pr_number" ]; then
+            gh pr edit "$pr_number" \
+              --title "更新 FlowWatch cask 到 ${FLOWWATCH_VERSION}" \
+              --body "$pr_body"
+          else
+            gh pr create \
+              --base main \
+              --head "$UPDATE_BRANCH" \
+              --title "更新 FlowWatch cask 到 ${FLOWWATCH_VERSION}" \
+              --body "$pr_body"
+          fi
