@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  brew-check:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check Ruby syntax
+        run: ruby -c Casks/flowwatch.rb
+
+      - name: Tap local repository
+        run: |
+          mkdir -p "$(brew --repository)/Library/Taps/huangxida"
+          ln -s "$PWD" "$(brew --repository)/Library/Taps/huangxida/homebrew-flowwatch"
+
+      - name: Check cask info
+        run: brew info --cask flowwatch
+
+      - name: Audit cask
+        run: brew audit --cask flowwatch
