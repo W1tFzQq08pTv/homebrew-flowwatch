@@ -1,6 +1,6 @@
 cask "flowwatch" do
-  version "2.1.0"
-  sha256 "10d2556d760fcc9b264f1c4351986388d9c173ec4a8474c68b6e7b526a93e38a"
+  version "2.2.0"
+  sha256 "8bce54b9749267c1d2f986d56aeeeb2fc5f2e3c4545065f9c9f52d952850b2a1"
 
   url "https://github.com/huangxida/FlowWatch/releases/download/v#{version}/FlowWatch.dmg"
   name "FlowWatch"
