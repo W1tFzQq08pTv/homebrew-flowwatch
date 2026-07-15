@@ -20,14 +20,14 @@ jobs:
 
       - name: Tap local repository
         run: |
-          mkdir -p "$(brew --repository)/Library/Taps/huangxida"
-          ln -s "$PWD" "$(brew --repository)/Library/Taps/huangxida/homebrew-flowwatch"
+          mkdir -p "$(brew --repository)/Library/Taps/w1tfzqq08ptv"
+          ln -s "$PWD" "$(brew --repository)/Library/Taps/w1tfzqq08ptv/homebrew-flowwatch"
 
       - name: Trust FlowWatch cask
-        run: brew trust --cask huangxida/flowwatch/flowwatch
+        run: brew trust --cask w1tfzqq08ptv/flowwatch/flowwatch
 
       - name: Check cask info
-        run: brew info --cask huangxida/flowwatch/flowwatch
+        run: brew info --cask w1tfzqq08ptv/flowwatch/flowwatch
 
       - name: Audit cask
-        run: brew audit --cask huangxida/flowwatch/flowwatch
+        run: brew audit --cask w1tfzqq08ptv/flowwatch/flowwatch
