@@ -2,10 +2,10 @@ cask "flowwatch" do
   version "2.5.0"
   sha256 "62014165cbbaee2f4f49860ce4eb034f5a207d4e00c7f0b1eb881921fa5fed29"
 
-  url "https://github.com/huangxida/FlowWatch/releases/download/v#{version}/FlowWatch.dmg"
+  url "https://github.com/W1tFzQq08pTv/FlowWatch/releases/download/v#{version}/FlowWatch.dmg"
   name "FlowWatch"
   desc "Menu bar network speed monitor and traffic stats"
-  homepage "https://github.com/huangxida/FlowWatch"
+  homepage "https://github.com/W1tFzQq08pTv/FlowWatch"
 
   depends_on macos: :ventura
 

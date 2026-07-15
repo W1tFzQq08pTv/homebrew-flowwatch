@@ -28,9 +28,9 @@ jobs:
         id: release
         run: |
           current_version="$(sed -nE 's/^[[:space:]]*version "([^"]+)".*/\1/p' "$CASK_PATH")"
-          latest_tag="$(gh api repos/huangxida/FlowWatch/releases/latest --jq ".tag_name")"
+          latest_tag="$(gh api repos/W1tFzQq08pTv/FlowWatch/releases/latest --jq ".tag_name")"
           latest_version="${latest_tag#v}"
-          asset_url="$(gh api repos/huangxida/FlowWatch/releases/latest --jq ".assets[] | select(.name == \"FlowWatch.dmg\") | .browser_download_url")"
+          asset_url="$(gh api repos/W1tFzQq08pTv/FlowWatch/releases/latest --jq ".assets[] | select(.name == \"FlowWatch.dmg\") | .browser_download_url")"
 
           if [ -z "$asset_url" ]; then
             echo "FlowWatch.dmg was not found in the latest release assets." >&2
@@ -70,8 +70,8 @@ jobs:
         if: steps.release.outputs.should_update == 'true'
         run: |
           ruby -c "$CASK_PATH"
-          mkdir -p "$(brew --repository)/Library/Taps/huangxida"
-          ln -s "$PWD" "$(brew --repository)/Library/Taps/huangxida/homebrew-flowwatch"
+          mkdir -p "$(brew --repository)/Library/Taps/w1tfzqq08ptv"
+          ln -s "$PWD" "$(brew --repository)/Library/Taps/w1tfzqq08ptv/homebrew-flowwatch"
           brew info --cask flowwatch
           brew audit --cask flowwatch
 
