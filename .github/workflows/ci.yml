@@ -23,8 +23,11 @@ jobs:
           mkdir -p "$(brew --repository)/Library/Taps/huangxida"
           ln -s "$PWD" "$(brew --repository)/Library/Taps/huangxida/homebrew-flowwatch"
 
+      - name: Trust FlowWatch cask
+        run: brew trust --cask huangxida/flowwatch/flowwatch
+
       - name: Check cask info
-        run: brew info --cask flowwatch
+        run: brew info --cask huangxida/flowwatch/flowwatch
 
       - name: Audit cask
-        run: brew audit --cask flowwatch
+        run: brew audit --cask huangxida/flowwatch/flowwatch
